@@ -24,6 +24,10 @@ class Base {
 		return self::$instance;
 	}
 
+	private function __construct() {
+		$this->run_autoload();
+	}
+
 	public function init() {
 		$this->include_files();
 
@@ -87,7 +91,7 @@ class Base {
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/widgets-cache.php' );
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/assets-cache.php' );
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/wpml-manager.php' );
-		
+
 		if ( is_admin() ) {
 			include_once( HAPPY_ADDONS_DIR_PATH . 'classes/updater.php' );
 			include_once( HAPPY_ADDONS_DIR_PATH . 'classes/dashboard.php' );
@@ -95,7 +99,7 @@ class Base {
 			include_once( HAPPY_ADDONS_DIR_PATH . 'classes/select2-handler.php' );
 			include_once( HAPPY_ADDONS_DIR_PATH . 'classes/dashboard-widgets.php' );
 		}
-		
+
 		if ( is_user_logged_in() ) {
 			include_once( HAPPY_ADDONS_DIR_PATH . 'classes/library-manager.php' );
 			include_once( HAPPY_ADDONS_DIR_PATH . 'classes/library-source.php' );
@@ -103,7 +107,7 @@ class Base {
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/api-handler.php' );
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/conditions-cache.php' );
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/theme-builder.php' );
-		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/condition-manager.php' );
+		// include_once( HAPPY_ADDONS_DIR_PATH . 'classes/condition-manager.php' );
 
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/builder-compatibility/astra.php');
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/builder-compatibility/bbtheme.php');
@@ -116,7 +120,7 @@ class Base {
 	}
 
 	public function include_on_init() {
-		include_once( HAPPY_ADDONS_DIR_PATH . 'inc/functions-extensions.php' );
+		Condition_Manager::instance();
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/extensions-manager.php' );
 		include_once( HAPPY_ADDONS_DIR_PATH . 'classes/credentials-manager.php' );
 	}
@@ -152,11 +156,35 @@ class Base {
 
 		$Select2 = __NAMESPACE__ . '\Controls\Select2';
 		$Widget_List = __NAMESPACE__ . '\Controls\Widget_List';
-		
+
 		ha_elementor()->controls_manager->register( new $Select2() );
 		ha_elementor()->controls_manager->register( new $Widget_List() );
 
 		$Text_Stroke = __NAMESPACE__ . '\Controls\Group_Control_Text_Stroke';
 		$controls_Manager->add_group_control( $Text_Stroke::get_type(), new $Text_Stroke() );
+	}
+
+	protected function autoload( $class_name ) {
+		if ( 0 !== strpos( $class_name, __NAMESPACE__ ) ) {
+			return;
+		}
+
+		if( 'Happy_Addons\Elementor\Condition_Manager' == $class_name ) {
+			$file_name = strtolower(
+				str_replace(
+					[ __NAMESPACE__ . '\\', '_', '\\' ], // replace namespace, underscrore & backslash
+					[ '', '-', '/' ],
+					$class_name
+				)
+			);
+			$file = HAPPY_ADDONS_DIR_PATH . 'classes/' . $file_name . '.php';
+			if ( ! class_exists( $class_name ) && is_readable( $file ) ) {
+				include_once $file;
+			}
+		}
+	}
+
+	public function run_autoload() {
+		spl_autoload_register( [ $this, 'autoload' ] );
 	}
 }
