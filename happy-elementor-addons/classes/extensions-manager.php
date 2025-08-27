@@ -13,6 +13,8 @@ class Extensions_Manager {
 	 */
 	public static function init() {
 
+		add_action( 'elementor/element/button/section_style/after_section_start', [ Features\Fixed_Size_Button::class, 'add_button_controls' ] );
+
 		$inactive_features = self::get_inactive_features();
 
 		foreach ( self::get_local_features_map() as $feature_key => $data ) {
@@ -51,7 +53,7 @@ class Extensions_Manager {
 	 * @return array
 	 */
 	public static function get_pro_features_map() {
-		return [
+		$pro_features_map = [
 			'display-conditions' => [
 				'title' => __( 'Display Condition', 'happy-elementor-addons' ),
 				'icon' => 'hm hm-display-condition',
@@ -83,6 +85,8 @@ class Extensions_Manager {
 				'is_pro' => true,
 			],
 		];
+
+		return apply_filters( 'happyaddons_get_pro_features_map', $pro_features_map );
 	}
 
 	/**
@@ -170,6 +174,18 @@ class Extensions_Manager {
 				// 'demo' => 'https://happyaddons.com/custom-mouse-cursor/',
 				'is_pro' => false,
 			],
+			'custom-js' => [
+				'title' => __( 'Custom JS', 'happy-elementor-addons' ),
+				'icon' => 'huge huge-code',
+				// 'demo' => 'https://happyaddons.com/custom-js/',
+				'is_pro' => false,
+			],
+			'background-parallax' => [
+				'title' => __( 'Background Parallax', 'happy-addons-pro' ),
+				'icon' => 'huge huge-web-design-02',
+				//'demo' => 'https://happyaddons.com/background-parallax/',
+				'is_pro' => false,
+			]
 		];
 	}
 
@@ -226,7 +242,6 @@ class Extensions_Manager {
 				break;
 
 			case 'text-stroke':
-				add_action( 'elementor/element/button/section_style/after_section_start', [ Features\Text_Stroke::class, 'add_button_controls' ] );
 				if( ! in_array( 'text-stroke', ha_get_inactive_features() ) ) {
 					add_action( 'elementor/element/heading/section_title_style/before_section_end', [ Features\Text_Stroke::class, 'add_text_stroke' ] );
 					add_action( 'elementor/element/theme-page-title/section_title_style/before_section_end', [ Features\Text_Stroke::class, 'add_text_stroke' ] );
@@ -238,9 +253,16 @@ class Extensions_Manager {
 				}
 				break;
 
+			// case 'custom-js':
+			// 	add_action( 'elementor/documents/register_controls', [Features\Custom_Js::class, 'scroll_to_top_controls'], 10 );
+			// 	add_action( 'wp_footer', [Features\Custom_Js::class, 'render_scroll_to_top_html'] );
+			// 	break;
+
 			case 'scroll-to-top':
 			case 'reading-progress-bar':
 			case 'custom-mouse-cursor':
+			case 'custom-js':
+			case 'background-parallax':
 				$cls_name = ucwords( str_replace( '-', ' ', $feature_key ) ); //remove ' - ' & uc first later
 				$cls_name = '\Happy_Addons\Elementor\Extensions\\' . str_replace( ' ', '_', $cls_name );
 				$cls_name::instance()->init();
